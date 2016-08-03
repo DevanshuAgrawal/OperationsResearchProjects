@@ -1,0 +1,116 @@
+{VERSION 6 0 "IBM INTEL NT" "6.0" }
+{USTYLETAB {CSTYLE "Maple Input" -1 0 "Courier" 0 1 255 0 0 1 0 1 0 0 
+1 0 0 0 0 1 }{PSTYLE "Normal" -1 0 1 {CSTYLE "" -1 -1 "Times" 1 12 0 
+0 0 1 2 2 2 2 2 2 1 1 1 1 }1 1 0 0 0 0 1 0 1 0 2 2 0 1 }{PSTYLE "Text \+
+Output" -1 6 1 {CSTYLE "" -1 -1 "Courier" 1 10 0 0 255 1 2 2 2 2 2 1 
+2 1 3 1 }1 1 0 0 0 0 1 0 1 0 2 2 0 1 }{PSTYLE "Maple Plot" -1 13 1 
+{CSTYLE "" -1 -1 "Times" 1 12 0 0 0 1 2 2 2 2 2 2 1 1 1 1 }3 1 0 0 0 
+0 1 0 1 0 2 2 0 1 }}
+{SECT 0 {EXCHG {PARA 0 "> " 0 "" {MPLTEXT 1 0 8 "restart;" }}}{EXCHG 
+{PARA 0 "> " 0 "" {MPLTEXT 1 0 19 "with(Optimization):" }}}{EXCHG 
+{PARA 0 "" 0 "" {TEXT -1 0 "" }}{PARA 0 "" 0 "" {TEXT -1 915 "\"PNN\" \+
+is the polyhedral neural network procedure. \"PNN\" takes as inputs tw
+o lists \"Positives\" and \"Negatives\", an integer \"K\" (K >= 1), re
+al parameters \"R\" (R >= 0) and \"G\" (0 <= G <= 1), and a positive i
+nteger \"Iterates\". \"Positives\" is a list of data points in Class 1
+ (i.e, positive class), and \"Negatives\" is a list of data points in \+
+Class -1 (i.e., negative class). \"PNN\" returns a list \"PolyhedronBo
+unds\" of inequalities that together define a polyhedral region whose \+
+boundary separates \"Positives\" and \"Negatives\", with \"Positives\"
+ inside the region. \"K\" is the maximum number of faces that the poly
+hedral region may have. \"R\" is the regularization parameter for the \+
+normal vectors and off-sets defining the faces of the polyhedron. \"R
+\" is the regularization parameter. \"G\" controls the influence of po
+ints in Class 1 outside the polyhedron. \"Iterates\" is the number of \+
+iterations in the training of the PNN." }}{PARA 0 "" 0 "" {TEXT -1 0 "
+" }}}{EXCHG {PARA 0 "> " 0 "" {MPLTEXT 1 0 1902 "PNN := proc(Positives
+, Negatives, K, R, G, Iterates)\nlocal x,y,alpha,beta,p,M,N,i,j,k,l,co
+unt,e,w,sol,J,Constraints,PolyhedronBounds:\n\np := nops(Positives):  \+
+# number of data points in Class 1\nM := p+nops(Negatives):  # total n
+umber of data points\n\nx := [op(Positives), op(Negatives)]:  # list o
+f data points\ny := [seq(1, i=1..p), seq(-1, i=1..M-p)]:  # list of cl
+ass labels for each data point\ni:='i':\n\nN := nops(x[1]):  # dimensi
+on of feature space\n\nalpha := [seq([0, 1], i=1..K)]:  # initialize n
+ormal vectors to polyhedron faces\nbeta := [seq(0, i=1..K)]:  # initia
+lize off-sets of polyhedron faces\n\n# train the neural network\n\nfor
+ count from 1 to Iterates do\nfor l from 1 to K do\n\nfor k from 1 to \+
+K do\nfor i from 1 to M do\ne[k,i] := max(0, 1-y[i]*(add(alpha[k][j]*x
+[i][j], j=1..N)-beta[k])):\nend do:\nend do:\nk:='k': i := 'i':\n\nfor
+ i from 1 to M do\nw[i] := mul(e[k,i], k in \{seq(1..K)\} minus \{l\})
+:\nend do:\ni:='i': j:='j': k:='k':\n\nJ := R*sum(mu[i], i=1..N+1) + s
+um(w[i]*xi[i], i=p+1..M) + sum(xi[i], i=1..p):  # objective function\n
+\nConstraints := \{\nseq( xi[i] >= 0, i=1..M),\nseq( xi[i] >= 1-y[i]*(
+sum(alpha_new[j]*x[i][j], j=1..N)-beta_new), i=1..M),\nseq( xi[i] >= G
+*max(seq(e[k,i], k in \{seq(1..K)\} minus \{l\})), i=1..p),\nseq(alpha
+_new[i] <= mu[i], i=1..N),\nseq(-alpha_new[i] <= mu[i], i=1..N),\nbeta
+_new <= mu[N+1],\n-beta_new <= mu[N+1]\n\}:\n\nsol := LPSolve(J, Const
+raints):  # solve linear program\nalpha[l] := [seq(rhs(sol[2][j]), j=-
+N..-1)]:\nbeta[l] := rhs(sol[2][1]):\n\nend do:\nend do:\n\n\n# alpha \+
+and beta are now lists of normal vectors and off-sets (respectively) o
+f the polyhedron faces\n# create set of nontrivial inequalities that d
+efine the polyhedron\n\nPolyhedronBounds := \{\}:\nfor k from 1 to K d
+o\nif add(abs(alpha[k][j]), j=1..N)+abs(beta[k]) >= 1e-5 then\nPolyhed
+ronBounds := \{op(PolyhedronBounds), sum(alpha[k][j]*u[j], j=1..N) >= \+
+beta[k]\}:\nend if:\nend do:\n\nreturn(PolyhedronBounds):\nend proc:" 
+}}}{EXCHG {PARA 0 "" 0 "" {TEXT -1 0 "" }}{PARA 0 "" 0 "" {TEXT -1 
+129 "Generate random data in the square [0, 3]^2. Positive points are \+
+chosen in [1, 2]^2. Negative points are chosen outside [1, 2]^2." }}
+{PARA 0 "" 0 "" {TEXT -1 0 "" }}}{EXCHG {PARA 0 "> " 0 "" {MPLTEXT 1 
+0 20 "with(stats[random]):" }}}{EXCHG {PARA 0 "> " 0 "" {MPLTEXT 1 0 
+20 "rand8 := rand(1..8):" }}}{EXCHG {PARA 0 "> " 0 "" {MPLTEXT 1 0 66 
+"Blocks := [[-1,1],[0,1],[1,1],[-1,0],[1,0],[-1,-1],[0,-1],[1,-1]]:" }
+}}{EXCHG {PARA 0 "> " 0 "" {MPLTEXT 1 0 68 "Positives := [seq([uniform
+[1,2](2)], i=1..20)]:  # points in Class 1" }}}{EXCHG {PARA 0 "> " 0 "
+" {MPLTEXT 1 0 85 "Negatives := [seq([uniform[1,2](2)]+Blocks[rand8()]
+, i=1..20)]:  # points in Class -1" }}}{EXCHG {PARA 0 "" 0 "" {TEXT 
+-1 0 "" }}{PARA 0 "" 0 "" {TEXT -1 44 "Train the PNN to obtain a decis
+ion boundary." }}{PARA 0 "" 0 "" {TEXT -1 0 "" }}}{EXCHG {PARA 0 "> " 
+0 "" {MPLTEXT 1 0 64 "PolyhedronBounds := PNN(Positives, Negatives, 5,
+ 0.01, 0.5, 10):" }}}{EXCHG {PARA 0 "" 0 "" {TEXT -1 0 "" }}{PARA 0 "
+" 0 "" {TEXT -1 53 "List the inequalities defining the decision bounda
+ry." }}{PARA 0 "" 0 "" {TEXT -1 0 "" }}}{EXCHG {PARA 0 "> " 0 "" 
+{MPLTEXT 1 0 87 "for i from 1 to nops(PolyhedronBounds) do\nprint(eval
+f(PolyhedronBounds[i], 4));\nend do:" }}{PARA 6 "" 1 "" {TEXT -1 32 "-
+14.51 <= -2.950*u[1]-4.286*u[2]" }}{PARA 6 "" 1 "" {TEXT -1 33 ".5163e
+-9 <= .6155*u[1]+.2284*u[2]" }}{PARA 6 "" 1 "" {TEXT -1 33 ".5163e-9 <
+= .6158*u[1]+.2282*u[2]" }}{PARA 6 "" 1 "" {TEXT -1 33 ".5163e-9 <= 13
+.28*u[1]-6.989*u[2]" }}{PARA 6 "" 1 "" {TEXT -1 31 "6.489 <= -1.610*u[
+1]+8.770*u[2]" }}}{EXCHG {PARA 0 "" 0 "" {TEXT -1 0 "" }}{PARA 0 "" 0 
+"" {TEXT -1 115 "Plot the data points and the decision boundary. Note:
+ The code below only works in a N=2-dimensional feature space." }}
+{PARA 0 "" 0 "" {TEXT -1 0 "" }}}{EXCHG {PARA 0 "> " 0 "" {MPLTEXT 1 
+0 12 "with(plots):" }}}{EXCHG {PARA 0 "> " 0 "" {MPLTEXT 1 0 76 "P_1 :
+= inequal(PolyhedronBounds, u[1]=0..3, u[2]=0..3):  # decision boundar
+y" }}}{EXCHG {PARA 0 "> " 0 "" {MPLTEXT 1 0 66 "P_2 := pointplot(Posit
+ives, color=blue):  # data points in Class 1" }}}{EXCHG {PARA 0 "> " 
+0 "" {MPLTEXT 1 0 66 "P_3 := pointplot(Negatives, color=red):  # data \+
+points in Class -1" }}}{EXCHG {PARA 0 "> " 0 "" {MPLTEXT 1 0 44 "displ
+ay(P_1, P_2, P_3, scaling=constrained);" }}{PARA 13 "" 1 "" {GLPLOT2D 
+561 561 561 {PLOTDATA 2 "6(-%)POLYGONSG6)7&7$$\"\"!F)F(7$F($\"\"$F)7$$
+\"/$y_a7%y:!#8F+7$$\"/JSNCj')Q!#CF(7%F'7$F($\"/lz](fFE#!#A7$$\"/oE+cJ%
+Q)!#BF(7%F'7$F($\"/S$HI)RgAF97$$\"/'Qf]8%)Q)F=F(7&F'7$F($\"/')HKjI*R(!
+#97$F+$\"/!y!pyc!H\"F07$F+F(7%7$$\"/@zzv^/cFIF+7$F+F+7$F+$\"/w)*oVc?8F
+0-%'COLOURG6&%$RGBG$\")5XFm!\")FZFZ-%&STYLEG6#%,PATCHNOGRIDG-F$6%7'F'F
+*FRFMF'-%&COLORG6&FY$\"#q!\"#Fao$\"#5!\"\"Fgn-%'CURVESG6)7$F1F-7$F6F:7
+$F?FB7$FFFJ7$FOFS-%*LINESTYLEG6#\"\"\"Fgn-%'POINTSG677$$\"+g)=dR\"!\"*
+$\"+;)RJ>\"Fip7$$\"+qTUA5Fip$\"+%[(=+=Fip7$$\"+d?bF9Fip$\"+%oAE%=Fip7$
+$\"+'G'G79Fip$\"+9sT'*>Fip7$$\"+2$3kQ\"Fip$\"+*=2Yp\"Fip7$$\"+!)H,t<Fi
+p$\"+$H;1t\"Fip7$$\"+aq]16Fip$\"+BFT'R\"Fip7$$\"+]L\"\\%>Fip$\"+Hk$4@
+\"Fip7$$\"+s?2]<Fip$\"+(RWZX\"Fip7$$\"+AEgO<Fip$\"+#fW)H8Fip7$$\"+p?t:
+;Fip$\"+l(=q%=Fip7$$\"+_y2r9Fip$\"+$faDR\"Fip7$$\"+6ZSO=Fip$\"+b#fUZ\"
+Fip7$$\"+X]3C7Fip$\"+=hgy5Fip7$$\"+IQo?<Fip$\"+A`qf:Fip7$$\"+(Hh'f<Fip
+$\"+pr8I9Fip7$$\"+=zbn=Fip$\"+u%=o'=Fip7$$\"+)H0p'>Fip$\"+?:?(\\\"Fip7
+$$\"+Xy:c:Fip$\"+<uij8Fip7$$\"++KQ))>Fip$\"+\\AMN<Fip-FW6&FYF(F($\"*++
+++\"Ffn-Fdp677$$\"*)>&GF'Fip$\"+q=/5EFip7$$\"+D#>=A#Fip$\"*G<)elFip7$$
+\"+=\\9]CFip$\"+nLG&Q#Fip7$$\"*k[t'\\Fip$\"+!)[bkCFip7$$\"+.s1[=Fip$\"
++K8#pM#Fip7$$\"+e#Hme#Fip$\"+)))z%Q=Fip7$$\"*65d>)Fip$\"+USj\\=Fip7$$
+\"+<slT?Fip$\"*v#**HGFip7$$\"+=q5>9Fip$\"*_r,C#Fip7$$\"*I`g;\"Fip$\"(C
+fp*Fip7$$\"+Y\")3#*HFip$\")FvPWFip7$$\"+7N()=BFip$\"*FSHS*Fip7$$\"+Q-r
+[AFip$\"+$y6+(HFip7$$\"*V**>F\"Fip$\"+Yn<N6Fip7$$\"+#QI)[;Fip$\"*p.V6%
+Fip7$$\"+^b\"Rs#Fip$\"+j,S\\DFip7$$\"*,#Q]*)Fip$\"+haAW=Fip7$$\"+FE*)4
+=Fip$\"**\\.\"e*Fip7$$\"*,$o[*)Fip$\"+E%z,B#Fip7$$\"*ia(G!)Fip$\"+<3tz
+AFip-FW6&FYF]wF(F(-%(SCALINGG6#%,CONSTRAINEDG" 1 2 0 1 10 0 2 9 1 4 1 
+1.000000 45.000000 45.000000 0 0 "Curve 1" "Curve 2" "Curve 3" "Curve \+
+4" "Curve 5" }}}}{EXCHG {PARA 0 "> " 0 "" {MPLTEXT 1 0 0 "" }}}}{MARK 
+"0 0 0" 0 }{VIEWOPTS 1 1 0 1 1 1803 1 1 1 1 }{PAGENUMBERS 0 1 2 33 1 
+1 }
